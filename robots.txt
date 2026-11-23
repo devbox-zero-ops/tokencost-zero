@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://devbox-zero-ops.github.io/tokencost-zero/sitemap.xml
