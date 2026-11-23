@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TokenCost Zero — Free Local LLM Token Counter & API Pricing Calculator</title>
+  <meta name="description" content="100% browser-local AI prompt token counter and multi-model API cost calculator (OpenAI, Claude, Gemini, DeepSeek, Qwen). Estimate per-call and monthly LLM spend with cache hit rates. Zero tracking." />
+  <style>
+    :root {
+      --bg: #070b14;
+      --panel: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --green: #4ade80;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 14px 22px;
+      background: #0b1220;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .brand { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+    .pill { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: rgba(74,222,128,0.14); color: var(--green); border: 1px solid rgba(74,222,128,0.3); }
+    .btn {
+      padding: 7px 13px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn:hover { border-color: var(--accent); }
+    .btn-tip { background: linear-gradient(135deg, #059669, #0284c7); border: none; color: #fff; font-weight: 600; }
+
+    .wrap { max-width: 1160px; margin: 0 auto; padding: 22px 18px 40px; }
+    .top-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 18px; margin-bottom: 20px; }
+    @media (max-width: 900px) { .top-grid { grid-template-columns: 1fr; } }
+    .box { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+    .box h2 { margin: 0 0 10px; font-size: 15px; color: var(--accent); }
+    textarea {
+      width: 100%;
+      min-height: 170px;
+      padding: 11px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #070b14;
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      resize: vertical;
+    }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+    .stat { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; }
+    .stat .val { font-size: 20px; font-weight: 800; color: #fff; }
+    .stat .lbl { font-size: 11.5px; color: var(--muted); }
+
+    .ctrl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+    .field label { font-size: 12px; color: var(--muted); }
+    .field input {
+      padding: 8px 10px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: #070b14;
+      color: var(--text);
+      font-size: 13.5px;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    th, td { padding: 11px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+    th { background: #131f33; color: #cbd5e1; font-weight: 700; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .best { color: var(--green); font-weight: 700; }
+    .table-wrap { overflow-x: auto; }
+
+    footer { margin-top: 28px; text-align: center; font-size: 12.5px; color: var(--muted); }
+    footer a { margin: 0 7px; }
+
+    dialog#tipDialog {
+      background: #0f172a; color: #e2e8f0; border: 1px solid #334155;
+      border-radius: 14px; max-width: 560px; width: 92vw; padding: 20px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.7);
+    }
+    dialog::backdrop { background: rgba(2, 6, 23, 0.75); backdrop-filter: blur(4px); }
+    .qr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+    .qr-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 10px; text-align: center; }
+    .qr-card img { width: 100%; max-width: 180px; border-radius: 8px; background: #fff; padding: 4px; }
+    .addr-box { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 9px 10px; margin-top: 8px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; word-break: break-all; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span>🧮 TokenCost Zero</span>
+      <span class="pill">100% Local · Zero Tracking</span>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <a class="btn" href="https://devbox-zero-ops.github.io/xiaheai-hub/" target="_blank">XiaheAI Hub</a>
+      <button class="btn" id="btnExportCsv">Export CSV</button>
+      <button class="btn" id="btnLang">中文 / EN</button>
+      <button class="btn btn-tip" id="btnOpenTip">☕ Support (USDT / 微信 / 支付宝)</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="top-grid">
+      <section class="box">
+        <h2 data-i18n="hPrompt">1. Paste Prompt / System Context (Instant Token Estimator)</h2>
+        <textarea id="promptInput" placeholder="Paste your prompt, JSON payload, or system instructions here..."></textarea>
+        <div class="stats">
+          <div class="stat"><div class="val" id="sTokens">0</div><div class="lbl" data-i18n="lTok">Est. Input Tokens</div></div>
+          <div class="stat"><div class="val" id="sChars">0</div><div class="lbl" data-i18n="lChar">Characters</div></div>
+          <div class="stat"><div class="val" id="sWords">0</div><div class="lbl" data-i18n="lWord">Words / CJK</div></div>
+        </div>
+      </section>
+
+      <section class="box">
+        <h2 data-i18n="hParams">2. Workload & Caching Parameters</h2>
+        <div class="ctrl-grid">
+          <div class="field"><label data-i18n="lIn">Input Tokens / Request</label><input type="number" id="inTok" value="2500" min="0" /></div>
+          <div class="field"><label data-i18n="lOut">Output Tokens / Request</label><input type="number" id="outTok" value="800" min="0" /></div>
+          <div class="field"><label data-i18n="lReq">Requests / Day</label><input type="number" id="reqDay" value="1000" min="1" /></div>
+          <div class="field"><label data-i18n="lCache">Prompt Cache Hit Rate (%)</label><input type="number" id="cachePct" value="50" min="0" max="100" /></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
+          <button class="btn" id="btnUsePrompt" data-i18n="btnUse">Use Estimator Input Tokens</button>
+          <button class="btn" id="btnAgentPreset" data-i18n="btnPreset">Preset: Coding Agent (25k in / 2k out)</button>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin:10px 0 0;" data-i18n="note">
+          Prices shown in USD per 1M tokens (editable reference rates). Cached input uses each provider's cache discount.
+        </p>
+      </section>
+    </div>
+
+    <section class="box">
+      <h2 data-i18n="hTable">3. Multi-Model API Cost Comparison (Sorted by Monthly Spend)</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Provider</th>
+              <th class="num">Input / 1M</th>
+              <th class="num">Cached / 1M</th>
+              <th class="num">Output / 1M</th>
+              <th class="num" data-i18n="thCall">Per 1k Calls</th>
+              <th class="num" data-i18n="thMonth">Monthly (30d)</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      Zero-Tracking Suite by <a href="https://devbox-zero-ops.github.io/xiaheai-hub/" target="_blank">XiaheAI Hub</a> ·
+      <a href="https://devbox-zero-ops.github.io/devbox-zero/" target="_blank">DevBox Zero</a> ·
+      <a href="https://devbox-zero-ops.github.io/invoice-zero/" target="_blank">InvoiceZero</a> ·
+      <a href="https://devbox-zero-ops.github.io/resumemd-zero/" target="_blank">ResumeMD Zero</a> ·
+      <a href="https://devbox-zero-ops.github.io/chaincalc-zero/" target="_blank">ChainCalc Zero</a>
+    </footer>
+  </main>
+
+  <dialog id="tipDialog">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <strong style="font-size:16px;">☕ Support TokenCost Zero</strong>
+      <button class="btn" onclick="document.getElementById('tipDialog').close()">Close</button>
+    </div>
+    <p style="font-size:13px;color:#94a3b8;margin:0 0 10px;">
+      100% browser-local & free forever. Support maintenance via USDT (priority), USDC, WeChat Pay, or Alipay:
+    </p>
+    <div class="qr-grid">
+      <div class="qr-card"><div style="font-size:13px;font-weight:600;margin-bottom:6px;color:#4ade80;">WeChat Pay / 微信</div><img src="assets/wechat-pay.jpg" alt="WeChat Pay" /></div>
+      <div class="qr-card"><div style="font-size:13px;font-weight:600;margin-bottom:6px;color:#38bdf8;">Alipay / 支付宝</div><img src="assets/alipay.jpg" alt="Alipay" /></div>
+    </div>
+    <div class="addr-box">
+      <span><strong>EVM USDT</strong> (Arbitrum/Polygon/ETH/BSC, USDC compatible):<br/><code>0xe4c8739bCC488bD98978CE976511735e0499d432</code></span>
+      <button class="btn" onclick="copyText('0xe4c8739bCC488bD98978CE976511735e0499d432', this)">Copy</button>
+    </div>
+    <div class="addr-box">
+      <span><strong>Solana USDT</strong> (SOL/USDC compatible):<br/><code>89XqpaJDKajhYFs4Vmex853yxoEU7HqwnMAPtTDpgZgG</code></span>
+      <button class="btn" onclick="copyText('89XqpaJDKajhYFs4Vmex853yxoEU7HqwnMAPtTDpgZgG', this)">Copy</button>
+    </div>
+  </dialog>
+
+  <script>
+    const MODELS = [
+      { name: "Gemini 2.5 Flash-Lite", provider: "Google", inP: 0.10, cacheP: 0.025, outP: 0.40 },
+      { name: "DeepSeek-V3.2 (Chat)", provider: "DeepSeek", inP: 0.27, cacheP: 0.07, outP: 1.10 },
+      { name: "GPT-4o-mini", provider: "OpenAI", inP: 0.15, cacheP: 0.075, outP: 0.60 },
+      { name: "Gemini 2.5 Flash", provider: "Google", inP: 0.30, cacheP: 0.075, outP: 2.50 },
+      { name: "Qwen-Max / Plus", provider: "Alibaba", inP: 0.40, cacheP: 0.10, outP: 1.20 },
+      { name: "DeepSeek-R1 (Reasoner)", provider: "DeepSeek", inP: 0.55, cacheP: 0.14, outP: 2.19 },
+      { name: "Claude 3.5 Haiku", provider: "Anthropic", inP: 0.80, cacheP: 0.08, outP: 4.00 },
+      { name: "Gemini 2.5 Pro", provider: "Google", inP: 1.25, cacheP: 0.31, outP: 10.00 },
+      { name: "GPT-4.1 / GPT-5 Standard", provider: "OpenAI", inP: 2.00, cacheP: 0.50, outP: 8.00 },
+      { name: "Claude Sonnet 4", provider: "Anthropic", inP: 3.00, cacheP: 0.30, outP: 15.00 },
+      { name: "Claude Opus 4", provider: "Anthropic", inP: 15.00, cacheP: 1.50, outP: 75.00 }
+    ];
+
+    const I18N = {
+      en: {
+        hPrompt: "1. Paste Prompt / System Context (Instant Token Estimator)",
+        lTok: "Est. Input Tokens", lChar: "Characters", lWord: "Words / CJK",
+        hParams: "2. Workload & Caching Parameters",
+        lIn: "Input Tokens / Request", lOut: "Output Tokens / Request", lReq: "Requests / Day", lCache: "Prompt Cache Hit Rate (%)",
+        btnUse: "Use Estimator Input Tokens", btnPreset: "Preset: Coding Agent (25k in / 2k out)",
+        note: "Reference rates in USD per 1M tokens. Cached input applies each provider's cache discount.",
+        hTable: "3. Multi-Model API Cost Comparison (Sorted by Monthly Spend)",
+        thCall: "Per 1k Calls", thMonth: "Monthly (30d)"
+      },
+      zh: {
+        hPrompt: "1. 粘贴 Prompt / 系统提示词（本地实时 Token 估算）",
+        lTok: "预估输入 Token", lChar: "总字符数", lWord: "英文词 + 中文字",
+        hParams: "2. 调用量与缓存命中率参数",
+        lIn: "单次输入 Token", lOut: "单次输出 Token", lReq: "每日请求次数", lCache: "Prompt 缓存命中率 (%)",
+        btnUse: "套用左侧估算 Token", btnPreset: "预设：编程 Agent (25k 输入 / 2k 输出)",
+        note: "参考单价单位为美元 / 百万 Token（USD / 1M），已按各厂商缓存折扣折算。",
+        hTable: "3. 主流大模型 API 费用对比（按 30 天月成本从低到高排序）",
+        thCall: "每千次调用", thMonth: "月度预估 (30天)"
+      }
+    };
+
+    let lang = (navigator.language || "").toLowerCase().startsWith("zh") ? "zh" : "en";
+    const el = (id) => document.getElementById(id);
+
+    function estimateTokens(txt) {
+      if (!txt) return { tok: 0, chars: 0, words: 0 };
+      const cjk = (txt.match(/[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]/g) || []).length;
+      const nonCjk = txt.length - cjk;
+      const words = (txt.trim().match(/[A-Za-z0-9_]+/g) || []).length + cjk;
+      const tok = Math.ceil(cjk * 1.45 + nonCjk / 3.8);
+      return { tok, chars: txt.length, words };
+    }
+
+    function updateEstimator() {
+      const r = estimateTokens(el("promptInput").value);
+      el("sTokens").textContent = r.tok.toLocaleString();
+      el("sChars").textContent = r.chars.toLocaleString();
+      el("sWords").textContent = r.words.toLocaleString();
+      return r.tok;
+    }
+
+    let lastRows = [];
+    function renderTable() {
+      const inT = Math.max(0, Number(el("inTok").value) || 0);
+      const outT = Math.max(0, Number(el("outTok").value) || 0);
+      const reqDay = Math.max(1, Number(el("reqDay").value) || 1);
+      const cache = Math.min(100, Math.max(0, Number(el("cachePct").value) || 0)) / 100;
+
+      const rows = MODELS.map((m) => {
+        const effInPrice = m.inP * (1 - cache) + m.cacheP * cache;
+        const perCall = (inT / 1e6) * effInPrice + (outT / 1e6) * m.outP;
+        const per1k = perCall * 1000;
+        const monthly = perCall * reqDay * 30;
+        return { ...m, per1k, monthly };
+      }).sort((a, b) => a.monthly - b.monthly);
+      lastRows = rows;
+
+      el("tbody").innerHTML = rows.map((r, i) => `
+        <tr>
+          <td><strong>${r.name}</strong></td>
+          <td>${r.provider}</td>
+          <td class="num">$${r.inP.toFixed(2)}</td>
+          <td class="num">$${r.cacheP.toFixed(3)}</td>
+          <td class="num">$${r.outP.toFixed(2)}</td>
+          <td class="num">$${r.per1k.toFixed(3)}</td>
+          <td class="num ${i === 0 ? "best" : ""}">$${r.monthly.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+        </tr>
+      `).join("");
+    }
+
+    function applyLang() {
+      const dict = I18N[lang];
+      document.querySelectorAll("[data-i18n]").forEach((n) => {
+        const k = n.getAttribute("data-i18n");
+        if (dict[k]) n.textContent = dict[k];
+      });
+    }
+
+    el("promptInput").addEventListener("input", updateEstimator);
+    ["inTok", "outTok", "reqDay", "cachePct"].forEach((id) => el(id).addEventListener("input", renderTable));
+    el("btnUsePrompt").addEventListener("click", () => {
+      const t = updateEstimator();
+      if (t > 0) { el("inTok").value = t; renderTable(); }
+    });
+    el("btnAgentPreset").addEventListener("click", () => {
+      el("inTok").value = 25000; el("outTok").value = 2000; el("reqDay").value = 200; el("cachePct").value = 70;
+      renderTable();
+    });
+    el("btnLang").addEventListener("click", () => { lang = lang === "zh" ? "en" : "zh"; applyLang(); });
+    el("btnOpenTip").addEventListener("click", () => el("tipDialog").showModal());
+    el("btnExportCsv").addEventListener("click", () => {
+      const lines = ["Model,Provider,Input_per_1M,Cached_per_1M,Output_per_1M,Per_1k_Calls_USD,Monthly_30d_USD"];
+      lastRows.forEach((r) => lines.push(`"${r.name}","${r.provider}",${r.inP},${r.cacheP},${r.outP},${r.per1k.toFixed(4)},${r.monthly.toFixed(2)}`));
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+      a.download = "llm-api-cost-comparison.csv";
+      a.click();
+    });
+    window.copyText = (txt, btn) => {
+      navigator.clipboard.writeText(txt);
+      const old = btn.textContent;
+      btn.textContent = "Copied!";
+      setTimeout(() => btn.textContent = old, 1400);
+    };
+
+    applyLang();
+    renderTable();
+  </script>
+</body>
+</html>
