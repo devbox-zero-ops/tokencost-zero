@@ -34,3 +34,10 @@ python -m http.server 8080
 
 - **EVM USDT (Arbitrum / Polygon / Ethereum / BSC, USDC compatible)**: `0xe4c8739bCC488bD98978CE976511735e0499d432`
 - **Solana USDT (SOL / USDC compatible)**: `89XqpaJDKajhYFs4Vmex853yxoEU7HqwnMAPtTDpgZgG`
+
+## Related Open-Source Tools & White-Label Bundle
+
+- **All 8 Zero-Tracking Tools & 10 Cost Calculators**: [XiaheAI Hub](https://devbox-zero-ops.github.io/xiaheai-hub/)
+- **Crypto Funding Arbitrage & Polymarket Scanner CLI (Python)**: [quant-radar-cli](https://github.com/devbox-zero-ops/quant-radar-cli)
+- **Full 8-App White-Label Self-Hosting Bundle (5 USDT / ¥29)**: [XiaheAI ZeroSuite Pro](https://devbox-zero-ops.github.io/xiaheai-hub/pro.html)
+- **ChatGPT Go / Plus / Pro Subscription Guides & Storefront**: [Subscription Guides](https://devbox-zero-ops.github.io/xiaheai-hub/chatgpt-account-vs-topup.html) · [shop.xiaheai.com](https://shop.xiaheai.com/)
